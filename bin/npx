@@ -1,0 +1,115 @@
+#!/bin/bash
+# Production-ready MCP server shim proxy wrapper
+
+# Strict error handling
+set -eo pipefail
+
+# Configuration
+PROXY_URL=${MCP_PROXY_URL:-"http://localhost:9876"}
+API_KEY=${MCP_API_KEY:-""}
+DEBUG=${MCP_DEBUG:-"false"}
+LOG_LEVEL=${MCP_LOG_LEVEL:-"info"}
+
+# Find the absolute path to the script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PARENT_DIR="$( cd "$SCRIPT_DIR/.." &> /dev/null && pwd )"
+MCP_SHIM_PATH="$PARENT_DIR/lib/mcp-shim.js"
+
+# Check if the shim actually exists
+if [ ! -f "$MCP_SHIM_PATH" ]; then
+  echo "ERROR: MCP shim script not found at: $MCP_SHIM_PATH" >&2
+  exit 1
+fi
+
+# Parse arguments to determine which MCP server is being requested
+SERVER_NAME="unknown"
+ALLOWED_PATHS=""
+
+# Extract server name and paths from args
+if [[ "$*" == *"server-filesystem"* ]]; then
+  SERVER_NAME="filesystem"
+  # Extract all path arguments (everything after server-filesystem)
+  ARGS=("$@")
+  FOUND_SERVER=false
+  PATHS=()
+  for ((i=0; i<${#ARGS[@]}; i++)); do
+    if [[ "${ARGS[$i]}" == *"server-filesystem"* ]]; then
+      FOUND_SERVER=true
+      continue
+    fi
+    if [ "$FOUND_SERVER" = true ]; then
+      # Skip options that start with -
+      if [[ ! "${ARGS[$i]}" == -* ]]; then
+        PATHS+=("${ARGS[$i]}")
+      fi
+    fi
+  done
+  
+  # Join paths with commas for the environment variable
+  ALLOWED_PATHS=$(IFS=,; echo "${PATHS[*]}")
+elif [[ "$*" == *"server-memory"* ]]; then
+  SERVER_NAME="memory"
+elif [[ "$*" == *"server-weather"* ]]; then
+  SERVER_NAME="weather"
+fi
+
+# If this is an MCP server request, use our shim
+if [[ "$SERVER_NAME" != "unknown" ]]; then
+  if [ "$DEBUG" = "true" ]; then
+    echo "[DEBUG] Intercepted call to MCP server: $SERVER_NAME" >&2
+    echo "[DEBUG] Original command: npx $*" >&2
+    echo "[DEBUG] Redirecting to MCP proxy at $PROXY_URL" >&2
+    echo "[DEBUG] Using shim at: $MCP_SHIM_PATH" >&2
+    if [ -n "$ALLOWED_PATHS" ]; then
+      echo "[DEBUG] Allowed paths: $ALLOWED_PATHS" >&2
+    fi
+  fi
+  
+  # Check if node is available
+  if ! command -v node &> /dev/null; then
+    echo "ERROR: Node.js is required but not found in PATH" >&2
+    exit 1
+  fi
+  
+  # Check if the node version is compatible (>= 14)
+  NODE_VERSION=$(node --version | cut -d. -f1 | tr -d 'v')
+  if [ "$NODE_VERSION" -lt 14 ]; then
+    echo "ERROR: Node.js version 14 or higher is required (found v$NODE_VERSION)" >&2
+    exit 1
+  fi
+  
+  # Verify that the proxy is reachable before starting
+  if [ "$DEBUG" = "true" ]; then
+    # Only check connectivity if in debug mode
+    if ! curl --silent --head --fail "$PROXY_URL" &>/dev/null; then
+      echo "WARNING: MCP proxy at $PROXY_URL appears to be unreachable" >&2
+    fi
+  fi
+  
+  # Run our shim with environment variables
+  MCP_PROXY_URL="$PROXY_URL" \
+  MCP_SERVER_NAME="$SERVER_NAME" \
+  MCP_API_KEY="$API_KEY" \
+  MCP_DEBUG="$DEBUG" \
+  MCP_LOG_LEVEL="$LOG_LEVEL" \
+  MCP_ALLOWED_PATHS="$ALLOWED_PATHS" \
+  node "$MCP_SHIM_PATH"
+else
+  # If not an MCP server, find the real npx to pass through
+  if command -v /usr/bin/npx &> /dev/null; then
+    REAL_NPX="/usr/bin/npx"
+  elif command -v /usr/local/bin/npx &> /dev/null; then
+    REAL_NPX="/usr/local/bin/npx"
+  else
+    # Find the first npx in PATH that isn't this script
+    REAL_NPX=$(which -a npx | grep -v "$SCRIPT_DIR/npx" | head -1)
+  fi
+  
+  if [ -z "$REAL_NPX" ]; then
+    echo "ERROR: Could not find real 'npx' command to pass through" >&2
+    exit 1
+  fi
+  
+  # Pass through to real npx
+  exec "$REAL_NPX" "$@"
+fi

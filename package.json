@@ -1,0 +1,11 @@
+{
+  "name": "mcp-compose-proxy-shim",
+  "version": "1.0.0",
+  "description": "Bridge local MCP calls to remote MCP-Compose servers",
+  "bin": {
+    "mcp-npx": "./bin/npx"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
