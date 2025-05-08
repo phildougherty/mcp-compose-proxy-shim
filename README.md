@@ -51,7 +51,7 @@ Since the "Import Servers" feature requires a Claude Max plan, you need to manua
    - **Linux**: `~/.config/Claude`
 
 2. Create or edit the MCP servers configuration file:
-   - Create a file called `mcp-servers.json` in the configuration directory
+   - Create a file called `claude_desktop_config.json` in the configuration directory
    - Add the following content (adjust paths to your environment):
 
 ```json
