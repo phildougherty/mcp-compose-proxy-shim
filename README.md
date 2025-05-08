@@ -25,7 +25,7 @@ This project is designed to integrate with [MCP-Compose](https://github.com/phil
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/mcp-compose-proxy-shim.git
+   git clone https://github.com/phildougherty/mcp-compose-proxy-shim.git
    cd mcp-compose-proxy-shim
    ```
 
@@ -62,8 +62,8 @@ Since the "Import Servers" feature requires a Claude Max plan, you need to manua
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/yourusername/Documents",
-        "/Users/yourusername/Downloads"
+        "/Users/phildougherty/Documents",
+        "/Users/phildougherty/Downloads"
       ]
     },
     "memory": {
@@ -104,7 +104,7 @@ Before running Claude Desktop, set these environment variables:
 | `MCP
 
 ### USER
-replace yourusername with my github username phildougherty
+replace phildougherty with my github username phildougherty
 
 ### ASSISTANT
 # MCP-Compose-Proxy-Shim
@@ -171,8 +171,8 @@ Since the "Import Servers" feature requires a Claude Max plan, you need to manua
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/yourusername/Documents",
-        "/Users/yourusername/Downloads"
+        "/Users/phildougherty/Documents",
+        "/Users/phildougherty/Downloads"
       ]
     },
     "memory": {
