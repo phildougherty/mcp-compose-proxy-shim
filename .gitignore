@@ -1,0 +1,60 @@
+# Node.js dependencies
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Test and coverage
+coverage/
+.nyc_output/
+test-results/
+
+# Build output
+dist/
+build/
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+
+# Temporary files
+tmp/
+temp/
+.temp/
+.tmp/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Packaged files
+*.tgz
+*.zip
+*.tar.gz
+
+# Local Claude config files
+claude-config/
+
+# MCP log files
+mcp-shim-*.log
+
+# Backup files
+*.bak
+*~
